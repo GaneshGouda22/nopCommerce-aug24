@@ -1,0 +1,30 @@
+pipeline {
+    agent { lable'dotnet8' }
+    options {
+        timeout(time: 1, unit: 'HOURS')
+    }
+    triggers {
+        POLLSCM('* * * * *')
+    }
+    stages {
+        stage ('SCM') {
+            steps {
+                git url: 'https://github.com/GaneshGouda22/nopCommerce-aug24.git',
+                    branch: 'developer'
+            }
+        }
+        stage ('BUILD') {
+            steps {
+                sh 'dotnet build -c Release src/Presentation/Nop.Web/Nop.Web.csproj'
+                sh 'mkdir published && dotnet publish  -o ./published -c Release src/Presentation/Nop.Web/Nop.Web.csproj'
+            }
+            post {
+            success {
+                zip zipfile: './published.zip',
+                    archive: 'true'
+                    dir: './published'
+                }
+            }
+        }
+    }
+}
